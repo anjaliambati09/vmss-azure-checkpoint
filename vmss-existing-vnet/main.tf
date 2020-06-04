@@ -307,31 +307,55 @@ resource "azurerm_monitor_autoscale_setting" "vmss_settings" {
     }
   }
 }
-
-resource "azurerm_windows_virtual_machine" {}
-
 resource "azurerm_marketplace_agreement" "checkpoint" {
-  offer = check-point-cg-r8040
-  plan = mgmt-byol
-  publisher = checkpoint
+  publisher = "checkpoint"
+  offer     = "check-point-cg-r8040"
+  plan      = "mgmt-byol"
 }
 
 resource "azurerm_virtual_machine" "chkpmgmt" {
-  location = var.management_location
-  name = r80dot40mgmt
-  network_interface_ids = [
-    data.azurerm_subnet.frontend.id,
-    data.azurerm_subnet.backend.id,
-  ]
-  resource_group_name = var.management_resourcegroup_name
-  storage_os_disk {
-    name = R80dot40OsDisk
-    caching = ReadWrite
-    name create_option = FromImage
-    name managed_disk_type = Premium_LRS
-  }
-  vm_size = var.vm_size
-  primary_network_interface_id = data.azurerm_subnet.frontend.id
-  depends_on = azurerm_marketplace_agreement.checkpoint
-  storage_image_reference {  }
+    name                  = "r80dot40mgmt"
+    location              = azurerm_resource_group.rg.location
+    resource_group_name   = azurerm_resource_group.rg.name
+    network_interface_ids = [azurerm_network_interface.mgmtexternal.id, azurerm_network_interface.mgmtinternal.id]
+    primary_network_interface_id = azurerm_network_interface.mgmtexternal.id
+    vm_size               = "Standard_D4s_v3"
+    
+    depends_on = [azurerm_marketplace_agreement.checkpoint]
+
+    storage_os_disk {
+        name              = "R80dot40OsDisk"
+        caching           = "ReadWrite"
+        create_option     = "FromImage"
+        managed_disk_type = "Standard_LRS"
+    }
+
+    storage_image_reference {
+        publisher = "checkpoint"
+        offer     = "check-point-cg-r8040"
+        sku       = "mgmt-byol"
+        version   = "latest"
+    }
+
+    plan {
+        name = "mgmt-byol"
+        publisher = "checkpoint"
+        product = "check-point-cg-r8040"
+        }
+    os_profile {
+        computer_name  = "r80dot40mgmt"
+        admin_username = "azureuser"
+        admin_password = "Cpwins1!!"
+        custom_data = file("customdata.sh") 
+    }
+
+    os_profile_linux_config {
+        disable_password_authentication = false
+    }
+
+    boot_diagnostics {
+        enabled = "true"
+        storage_uri = azurerm_storage_account.mystorageaccount.primary_blob_endpoint
+    }
+
 }
