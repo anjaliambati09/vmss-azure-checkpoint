@@ -18,7 +18,7 @@ output "admin_username" {
   value = var.admin_username
 }
 
-output "admin_password"{
+output "admin_password" {
   value = var.admin_password
 }
 
@@ -26,11 +26,11 @@ output "vm_instance_identity" {
   value = var.vm_instance_identity_type
 }
 
-output "sic_key"{
+output "sic_key" {
   value = var.sic_key
 }
 
-output "template_name"{
+output "template_name" {
   value = var.template_name
 }
 
@@ -38,7 +38,7 @@ output "template_version" {
   value = var.template_version
 }
 
-output "bootstrap_script"{
+output "bootstrap_script" {
   value = var.bootstrap_script
 }
 
